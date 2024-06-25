@@ -1,0 +1,6 @@
+Receipt #0
+Cashier: Pesho
+Date: 2024-06-25T18:15:17.880538500
+Croissant x 2 = 28.80
+Burger x 3 = 28.80
+Total: 57.599999999999994
