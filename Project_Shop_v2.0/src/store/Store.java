@@ -6,6 +6,7 @@ import store.seed.SeedData;
 import store.services.CashierService;
 import store.services.CheckoutService;
 import store.services.ProductService;
+import store.services.ReceiptService;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -14,14 +15,14 @@ public class Store {
     private CashierService cashiers;
     private CheckoutService checkouts;
     private ProductService products;
-    private ArrayList<Receipt> receipts;
+    private ReceiptService receipts;
     private String name;
 
     public Store(String name) {
         this.cashiers = new CashierService();
         this.checkouts = new CheckoutService();
         this.products = new ProductService();
-        this.receipts = new ArrayList<>();
+        this.receipts = new ReceiptService();
         this.name = name;
 
         checkouts.getCheckoutById(1).setCashier(cashiers.getCashierById(1));
@@ -63,8 +64,8 @@ public class Store {
     }
 
     // Add receipt
-    public void addReceipt(Receipt receipt) {
-        receipts.add(receipt);
+    public void addReceipt(Cashier cashier, List<Product> products) {
+        receipts.issueReceipt(cashier, products);
     }
 
     // Get total expenses for salaries
@@ -79,7 +80,7 @@ public class Store {
 
     // Get total income from sold products
     public double getTotalIncome() {
-        return receipts.stream().mapToDouble(Receipt::getTotalAmount).sum();
+        return receipts.getAllReceipts().stream().mapToDouble(Receipt::getTotalAmount).sum();
     }
 
     // Get total revenue from sold products
@@ -94,7 +95,7 @@ public class Store {
 
     // Print all receipts
     public void printAllReceipts() {
-        receipts.forEach(Receipt::printReceipt);
+        receipts.getAllReceipts().forEach(Receipt::printReceipt);
     }
 
 
@@ -147,16 +148,13 @@ public class Store {
                         .findFirst().orElseThrow(() -> new InsufficientQuantityException("Product not found."));
 
                 if (p != null) {
-                    this.products.purchaseProduct(p.getId(), p.getQuantity());
+                    this.products.purchaseProduct(p.getId(), item.getQuantity());
 
                 } else {
                     System.out.println("Something went wrong with product: " + item.getName());
                 }
             }
-            Receipt receipt = new Receipt(this.receipts.size(), this.checkouts.getCheckoutById(checkoutId).getCashier(), customerProducts);
-            addReceipt(receipt);
-            receipt.printReceipt();
-            receipt.saveReceiptToFile();
+            receipts.issueReceipt(this.checkouts.getCheckoutById(checkoutId).getCashier(), customerProducts);
         }
     }
 
@@ -173,8 +171,22 @@ public class Store {
         return this.products.getAllProducts();
     }
 
+    public void getAllSoldProducts() {
+        for(Product p : this.receipts.getAllSoldProducts()) {
+            System.out.println(p.getProductInfo());
+        }
+    }
+
+    public int getProductQuantityById(int id) {
+        return this.products.getProductById(id).getQuantity();
+    }
+
+    public boolean getProductValidityById(int id) {
+        return this.products.getAllAvailableProductIds().contains(id);
+    }
+
     public List<Receipt> getReceipts() {
-        return this.receipts;
+        return this.receipts.getAllReceipts();
     }
 
     public String getName() {
@@ -195,6 +207,10 @@ public class Store {
                 System.out.println(p.getProductInfo());
             }
         }
+    }
+
+    public boolean checkCheckoutAvailability(int id){
+        return this.checkouts.isCheckoutAvailable(id);
     }
 
 

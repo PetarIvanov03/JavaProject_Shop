@@ -36,16 +36,22 @@ public class CommandLineInterface {
                     break;
                 case "select shop":
                     String name = scanner.nextLine();
-                    //must not be null
-
-                    selectShop(this.stores.stream()
-                            .filter(x -> x.getName().equals(name))
-                            .findFirst().orElseThrow(() -> new StoreNotFoundException("Store with name: " + name + " not found.")));
+                    try {
+                        selectShop(this.stores.stream()
+                                .filter(x -> x.getName().equals(name))
+                                .findFirst().orElseThrow(() -> new StoreNotFoundException("Store with name: " + name + " not found.")));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                     break;
                 case "new shop":
                     System.out.println("Enter new shop name:");
-                    //must not be null
                     String storeName = scanner.nextLine();
+
+                    if (storeName == null || storeName.trim().isEmpty()) {
+                        throw new NullStoreNameException("Shop name cannot be null or empty.");
+                    }
+
                     newShop(storeName);
                     break;
                 case "exit":
@@ -66,7 +72,7 @@ public class CommandLineInterface {
         System.out.println();
     }
 
-    private void selectShop(Store store) {
+    private void selectShop(Store store) throws Exception {
         System.out.println("Shop - Commands:");
         System.out.println("commands");
         System.out.println("shop name");
@@ -98,11 +104,7 @@ public class CommandLineInterface {
                     store.getCheckouts().forEach(System.out::println);
                     break;
                 case "shop products":
-                    try {
-                        shopProducts(store);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
+                    shopProducts(store);
                     break;
                 case "add new product":
                     addNewProduct(store);
@@ -118,6 +120,12 @@ public class CommandLineInterface {
                     break;
                 case "expired products":
                     store.printAllExpiredProducts();
+                    break;
+                case "print all receipts":
+                    store.printAllReceipts();
+                    break;
+                case "print all sold products":
+                    store.getAllSoldProducts();
                     break;
                 case "exit":
                     return;
@@ -139,6 +147,8 @@ public class CommandLineInterface {
         System.out.println("total revenue");
         System.out.println("cashiers info");
         System.out.println("expired products");
+        System.out.println("print all receipts");
+        System.out.println("print all sold products");
         System.out.println("exit");
         System.out.println();
     }
@@ -147,31 +157,56 @@ public class CommandLineInterface {
         Scanner scanner = new Scanner(System.in);
         String line = "";
 
+        store.printAllValidProducts();
+
         HashMap<Integer, Integer> productsList = new HashMap<>();
 
-        while(!line.equals("end")) {
+        while(true) {
             System.out.print("Enter product Id: ");
             int id = scanner.nextInt();
+
+            if (!store.getProductValidityById(id)) {
+                throw new IdOutOfRangeException("Id must be in range");
+            }
+
             scanner.nextLine();
             System.out.print("Quantity: ");
             int quantity = scanner.nextInt();
+
+            if (quantity < 0 || quantity >= store.getProductQuantityById(id)){
+                throw new InsufficientQuantityException("Quantity must be positive and less than available in store");
+            }
+
+
             scanner.nextLine();
 
             productsList.put(id, quantity);
 
-            System.out.println("Continue?");
-
+            System.out.println("Continue? (yes/no)");
             line = scanner.nextLine();
+
+            if (line.equalsIgnoreCase("yes")) {
+            }
+            else if(line.equalsIgnoreCase("no")){
+                break;
+            }
+            else{
+                throw new NullOrNegativeProductQuantityException("Invalid answer");
+            }
+
         }
 
-        System.out.println("Ended");
+        System.out.println("Ended shopping... going to checkout");
         System.out.println("Select checkout Id:");
+
         store.getCheckouts().forEach(System.out::println);
 
         int checkoutId = scanner.nextInt();
         scanner.nextLine();
 
-        store.sellProducts(productsList, checkoutId);
+        if (store.checkCheckoutAvailability(checkoutId)){
+            store.sellProducts(productsList, checkoutId);
+        }
 
     }
 
@@ -179,9 +214,6 @@ public class CommandLineInterface {
 
 
     private void newShop(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new NullStoreNameException("Shop name cannot be null or empty.");
-        }
 
         this.stores.add(new Store(name));
     }
@@ -218,7 +250,7 @@ public class CommandLineInterface {
             isFood = false;
         }
         else{
-            throw new NullOrNegativeProductQuantityException("Quantity must be positive");
+            throw new NullOrNegativeProductQuantityException("Invalid answer");
         }
 
         // Get expiration date

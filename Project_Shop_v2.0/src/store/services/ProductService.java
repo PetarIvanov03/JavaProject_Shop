@@ -21,6 +21,16 @@ public class ProductService {
     public List<Product> getAllProducts() {
         return new ArrayList<>(products);
     }
+    public List<Integer> getAllAvailableProductIds() {
+        List<Integer> result = new ArrayList<>();
+
+        for (Product p : this.products){
+            if (p.isValid()){
+                result.add(p.getId());
+            }
+        }
+        return result;
+    }
 
     public Product getProductById(int id) {
         return products.stream()

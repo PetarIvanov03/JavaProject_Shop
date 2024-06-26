@@ -18,22 +18,13 @@ public class Product {
         this.buyPrice = buyPrice;
         this.category = category;
         this.expirationDate = expirationDate;
-        this.sellPrice = calculateSellPrice();
-        this.quantity = quantity;
-    }
-
-    public Product(String name, double buyPrice, Category category, LocalDate expirationDate, int quantity) {
-        this.name = name;
-        this.buyPrice = buyPrice;
-        this.category = category;
-        this.expirationDate = expirationDate;
-        this.sellPrice = calculateSellPrice();
+        this.sellPrice = calculateSellPrice(this.buyPrice);
         this.quantity = quantity;
     }
 
     // Private functions
-    private double calculateSellPrice() {
-        double result = this.buyPrice;
+    double calculateSellPrice(double buyPrice) {
+        double result = buyPrice;
         result *= category.getMarkUp();
         long daysBetween = ChronoUnit.DAYS.between(LocalDate.now(), this.expirationDate);
 
@@ -42,7 +33,7 @@ public class Product {
             if (daysBetween < 0) {
                 result = 0;
             }
-        } else if (daysBetween > 5 && daysBetween <= 10) {
+        } else if (daysBetween <= 10) {
             result *= 0.95;
         }
 

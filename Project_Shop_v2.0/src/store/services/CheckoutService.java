@@ -1,5 +1,6 @@
 package store.services;
 
+import store.exceptions.NullCashierException;
 import store.models.Checkout;
 import store.models.Product;
 import store.models.Receipt;
@@ -32,6 +33,10 @@ public class CheckoutService {
                 .filter(checkout -> checkout.getId() == id)
                 .findFirst()
                 .orElse(null);
+    }
+
+    public boolean isCheckoutAvailable(int id){
+        return getCheckoutById(id).isAvailable();
     }
 
     public void updateCheckout(Checkout checkout) {

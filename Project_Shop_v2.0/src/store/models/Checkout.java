@@ -25,6 +25,16 @@ public class Checkout {
         this.cashier = cashier;
     }
 
+    public boolean isAvailable() {
+        try{
+            this.cashier.getName();
+            return true;
+        }
+        catch (NullPointerException ex){
+            return false;
+        }
+    }
+
     @Override
     public String toString(){
 

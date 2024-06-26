@@ -3,6 +3,7 @@ package store.models;
 import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.text.DecimalFormat;
 import java.util.List;
 
 public class Receipt {
@@ -25,23 +26,29 @@ public class Receipt {
     }
 
     public void printReceipt() {
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DecimalFormat decimalFormat = new DecimalFormat("0.00");
+
         System.out.println("Receipt #" + id);
         System.out.println("Cashier: " + cashier.getName());
-        System.out.println("Date: " + dateTime);
+        System.out.println("Date: " + dateTime.format(dateFormatter));
         products.forEach(p -> System.out.println(p.getName() + " x " + p.getQuantity() + " = " + p.getSellPriceAsString(p.getSellPrice() * p.getQuantity())));
-        System.out.println("Total: " + totalAmount);
+        System.out.println("Total: " + decimalFormat.format(totalAmount));
     }
 
     public void saveReceiptToFile() throws IOException {
         String fileName = "receipt_" + id + ".txt";
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DecimalFormat decimalFormat = new DecimalFormat("0.00");
+
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
             writer.write("Receipt #" + id + "\n");
             writer.write("Cashier: " + cashier.getName() + "\n");
-            writer.write("Date: " + dateTime + "\n");
+            writer.write("Date: " + dateTime.format(dateFormatter) + "\n");
             for (Product p : products) {
                 writer.write(p.getName() + " x " + p.getQuantity() + " = " + p.getSellPriceAsString(p.getSellPrice() * p.getQuantity()) + "\n");
             }
-            writer.write("Total: " + totalAmount + "\n");
+            writer.write("Total: " + decimalFormat.format(totalAmount) + "\n");
         }
     }
 
